@@ -1,0 +1,5 @@
+luno-python==0.0.8
+python-dotenv==0.19.2
+websockets==10.1 #gatau dipakek atau engga
+websocket-client==1.2.3
+rel==0.4.7
