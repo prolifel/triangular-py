@@ -80,19 +80,17 @@ def getTransactionVolume(client, bestPrice, first, second):
     # volume1 = balanceIDR / float(first["price"])
     volume2 = 99.8 / 100 * volume1 / float(second["price"])
     volume3 = 99.9 / 100 * volume2
-    
-    # kalau volume > 0.00015, execute
-    
+        
     return "{:.6f}".format(volume1), "{:.6f}".format(volume2), "{:.6f}".format(volume3)
     
 # Create market order
 def createOrder(client, price1, volume1, price2, volume2, price3, volume3):
     try:
-        client.post_limit_order('XBTIDR', price1, 'ASK', volume1, post_only=True)
+        client.post_limit_order('XBTIDR', price1, 'BID', volume1)
         try:
-            client.post_limit_order('ETHXBT', price2, 'ASK', volume2, post_only=True)
+            client.post_limit_order('ETHXBT', price2, 'BID', volume2)
             try:
-                client.post_limit_order('ETHIDR', price3, 'BID', volume3, post_only=True)
+                client.post_limit_order('ETHIDR', price3, 'ASK', volume3)
             except Exception as e:
                 print('error 3rd: ', e)
                 return
@@ -110,22 +108,26 @@ while True:
     second = getTopOrderBook(c, 2)[0]
     third = getTopOrderBook(c, 3)[0]
     
-    # print(f'price1: {first["price"]}. volume1: {first["volume"]}')
-    # print(f'price2: {second["price"]}. volume2: {second["volume"]}')
-    # print(f'price3: {third["price"]}. volume3: {third["volume"]}')
+    volume1, volume2, volume3 = getTransactionVolume(c, getBestPrice(first, second, third), first, second)
+    print(f'price1: {first["price"]}. volume1: {volume1}')
+    print(f'price2: {second["price"]}. volume2: {volume2}')
+    print(f'price3: {third["price"]}. volume3: {volume3}')
     
     percentage = getPercentage(first, second, third)
     print(f'percentage is {percentage}')
+    price1 = first['price']
+    price2 = second['price']
+    price3 = third['price']
     
     if percentage > 100.5:
-        price1 = first['price']
-        price2 = second['price']
-        price3 = third['price']
-        volume1, volume2, volume3 = getTransactionVolume(c, getBestPrice(first, second, third), first, second)
+        if volume1 > 0.00015 and volume2 > 0.01 and volume3 > 0.001:
+            createOrder(c, price1, volume1, price2, volume2, price3, volume3)
+            break
+        else: 
+            continue
         
-        # print(price1, price2, price3)
         # print(type(price1), type(price2), type(price3))
         # print(volume1, volume2, volume3)
         # print(type(volume1), type(volume2), type(volume3))
-        createOrder(c, price1, volume1, price2, volume2, price3, volume3)
-        break
+        # createOrder(c, price1, volume1, price2, volume2, price3, volume3)
+        # break
